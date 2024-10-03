@@ -1,0 +1,26 @@
+// remove scrollbars from body when loader is active
+body[rockloader] {
+  overflow: hidden;
+}
+
+// style the wrapper
+div[rockloader] {
+  // by default this is hidden
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+
+  // basic positioning
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999999;
+
+  // position loader in the center
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
