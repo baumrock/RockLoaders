@@ -169,6 +169,13 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
     wire()->files->filePutContents($this->cssfile, $less->getCss());
   }
 
+  public function __debugInfo(): array
+  {
+    return [
+      'loaders' => $this->loaders,
+    ];
+  }
+
   /**
    * Check if any file has changed
    */
@@ -304,11 +311,12 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
     $html = '<div class="uk-overflow-auto"><table class="uk-table uk-table-small uk-table-striped">';
     $html .= '<thead><tr><th>Name</th><th>Path & Setup</th></tr></thead>';
     foreach ($this->loaders as $key => $path) {
+      $dir = dirname($path);
       $html .= "<tr>
         <td class=uk-text-nowrap><a href class=demo>{$key}</a></td>
         <td class=uk-text-nowrap>
         <div>{$path} <span class='uk-text-small uk-text-muted'>[.html/.less]</span></div>
-        <pre class='uk-margin-small-top uk-margin-remove-bottom' style='font-size:0.75em'>rockloaders()->add(['{$key}' => '{$path}']);</pre>
+        <pre class='uk-margin-small-top uk-margin-remove-bottom' style='font-size:0.75em'>rockloaders()->add(['$key' => '$dir']);</pre>
         </td>
       </tr>";
     }
