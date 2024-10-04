@@ -19,21 +19,40 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
   const forceRecompile = false;
 
   public $cssfile;
-  public $addDemoLoaders = false;
+  public $addAllLoaders = false;
   private $loaders = [];
 
   public function init()
   {
     $this->cssfile = wire()->config->paths->assets . 'rockloaders.min.css';
-    if ($this->addDemoLoaders) $this->addAll(__DIR__ . '/demo');
+    if ($this->addAllLoaders) $this->addAll(__DIR__ . '/loaders');
     wire()->addHookBefore('Page::render', $this, 'compileLoaders');
     wire()->addHookAfter('Modules::refresh', $this, 'clearCache');
     wire()->addHookAfter('Page::render', $this, 'addMarkupHook');
     wire()->addHookBefore('RockLoaders::addMarkup', $this, 'addMarkupForDemo');
   }
 
-  public function add(array $loaders): void
+  /**
+   * Attach a loader
+   *
+   * Usage (regular syntax):
+   * rockloaders()->add(['name' => '/path/to/files']);
+   *
+   * Short syntax (for loaders of this module):
+   * rockloaders()->add('email');
+   *
+   * @param array|string $loaders
+   * @return void
+   */
+  public function add(array|string $loaders): void
   {
+    // if loader is provided as string, we convert it into an array
+    // looking for the loader in the /loaders folder of this module
+    if (is_string($loaders)) {
+      $loaders = [$loaders => __DIR__ . "/loaders"];
+    }
+
+    // loop through all loaders and sanitize the path
     foreach ($loaders as $key => $path) {
       // sanitize path
       // we add prefix / to support usage of "site/templates/..."
@@ -274,9 +293,10 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
     // do not add /loaders folder?
     $inputfields->add([
       'type' => 'checkbox',
-      'name' => 'addDemoLoaders',
-      'label' => 'Add demo loaders',
-      'checked' => $this->addDemoLoaders ? 'checked' : '',
+      'name' => 'addAllLoaders',
+      'label' => 'Add all loaders from this module\'s /loaders folder',
+      'checked' => $this->addAllLoaders ? 'checked' : '',
+      'notes' => 'This should only be turned on to check out all loaders, but it should be turned off for production to avoid adding unnecessary css to your website.',
     ]);
 
     // attached loaders
