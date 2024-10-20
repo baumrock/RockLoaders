@@ -2,6 +2,14 @@
 
 The `RockLoaders` module is a ProcessWire module designed to easily add animated loading animations/spinners to your website.
 
+Dots animation:
+
+<img src=https://i.imgur.com/VcnRVM6.gif class=blur>
+
+Mail animation:
+
+<img src=https://i.imgur.com/LEV3C8q.gif class=blur>
+
 ## Adding Loaders
 
 To add a new loader, use the `add` method and pass an array of loader configurations:
@@ -17,18 +25,34 @@ The path should be relative to the PW root folder!
 
 ### Example
 
-Let's say you want to add the loader "foo" which has its files in `/site/templates/loaders/foo.less|html`.
+Let's say you want to add a loder from https://cssloaders.github.io/
+
+Click on the loader and copy the CSS, then place it in `/site/templates/loaders/my-loader.less|html`.
+
+Then tell RockLoaders to load it:
 
 ```php
 // site/ready.php
 rockloaders()->add([
-  'foo' => 'site/templates/loaders',
+  'my-loader' => 'site/templates/loaders',
 ]);
 ```
 
+Note that the array key must match the filename of the loader.
+
+Now you can add the `rockloader` attribute to your body tag to show the loader:
+
+```html
+<body rockloader="my-loader">
+  <!-- your content -->
+</body>
+```
+
+Usually you'd do this via JavaScript, but for testing you can add it manually as well.
+
 ### Short Syntax
 
-For all loaders shipped with this module, you can use the short syntax by just passing the loader name:
+This module ships with several common loaders. They are placed in the `loaders` folder of the module. For these loadersyou can use the short syntax by just passing the loader name:
 
 ```php
 // site/ready.php
