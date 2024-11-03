@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/baumrock/RockLoaders/compare/v1.1.0...v1.1.1) (2024-11-03)
+
+
+### Bug Fixes
+
+* force recompile when module config changed + improve docs ([301f495](https://github.com/baumrock/RockLoaders/commit/301f495362119aac7b51e7c731614b5f9df2fa5b))
+
 ## [1.1.0](https://github.com/baumrock/RockLoaders/compare/v1.0.0...v1.1.0) (2024-10-04)
 
 
