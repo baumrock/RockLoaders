@@ -19,13 +19,15 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
   const forceRecompile = false;
 
   public $cssfile;
-  public $addAllLoaders = false;
   private $loaders = [];
 
   public function init()
   {
     $this->cssfile = wire()->config->paths->assets . 'rockloaders.min.css';
-    if ($this->addAllLoaders) $this->addAll(__DIR__ . '/loaders');
+
+    // add checked internal loaders
+    foreach ($this->internalLoaders as $key) $this->add($key);
+
     wire()->addHookBefore('Page::render', $this, 'compileLoaders');
     wire()->addHookAfter('Modules::refresh', $this, 'clearCache');
     wire()->addHookAfter('Page::render', $this, 'addMarkupHook');
@@ -186,6 +188,7 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
     $less->setOption('compress', self::compress);
     $less->addStr($this->getCSS());
     wire()->files->filePutContents($this->cssfile, $less->getCss());
+    wire()->session->forceRockLoadersRecompile = false;
   }
 
   public function __debugInfo(): array
@@ -200,6 +203,10 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
    */
   private function filesChanged(): bool
   {
+    if (wire()->session->forceRockLoadersRecompile) {
+      return true;
+    }
+
     // if css file does not exist, we need to compile
     if (!is_file($this->cssfile)) return true;
     $mCSS = filemtime($this->cssfile);
@@ -265,6 +272,11 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
 
   public function getModuleConfigInputfields($inputfields)
   {
+    // reset cache when visiting this page
+    if (wire()->input->post->submit_save_module) {
+      wire()->session->forceRockLoadersRecompile = true;
+    }
+
     $name = strtolower($this);
     $inputfields->add([
       'type' => 'markup',
@@ -279,24 +291,38 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
       <div>The development of this module has been driven by my commercial modules <a href='https://www.baumrock.com/processwire/module/rockcommerce/'>RockCommerce</a>, <a href='https://www.baumrock.com/processwire/module/rockforms/'>RockForms</a> and <a href='https://www.baumrock.com/processwire/module/rockgrid/'>RockGrid</a>. If you want to support my work, please consider to buy one of my modules. Thank you! 🤗</div>",
     ]);
 
+    // step 1
+    $fs = new InputfieldFieldset();
+    $fs->label = 'Step 1: Attach Loaders';
+    $inputfields->add($fs);
+
+    $f = new InputfieldCheckboxes();
+    $f->name = 'internalLoaders';
+    $f->label = 'Internal Loaders';
+    foreach ($this->lessArray() as $name) {
+      $f->addOption($name);
+    }
+    $f->value = $this->internalLoaders;
+    $f->notes = 'Note: Internal loaders can also be loaded via API short syntax: `rockloaders()->add("email")`';
+    $fs->add($f);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'External Loaders',
+      'value' => '<p>Add external loaders by adding the following to your ready.php file:</p>
+      <pre class="uk-margin-small-top uk-margin-remove-bottom">rockloaders()->add(["name" => "path/to/loader"]);</pre>',
+      'notes' => 'To update the CSS, you need to save this page!',
+    ]);
+
     // usage
     $inputfields->add([
       'type' => 'markup',
-      'label' => 'Usage',
-      'value' => 'Simply add <em>rockloader=xxx</em> to the body tag of your website:
+      'label' => 'Step 2: Add loader to your DOM via JavaScript',
+      'value' => 'To show a loadeing animation simply add <em>rockloader=xxx</em> to the body tag of your website, where xxx is the name of the loader you want to show:
       <pre class="uk-margin-small-top uk-margin-remove-bottom">' .
         'document.body.setAttribute("rockloader", "rocket");' .
         "\n" . 'setTimeout(() => document.body.removeAttribute("rockloader"), 2000);' .
         '</pre>',
-    ]);
-
-    // do not add /loaders folder?
-    $inputfields->add([
-      'type' => 'checkbox',
-      'name' => 'addAllLoaders',
-      'label' => 'Add all loaders from this module\'s /loaders folder',
-      'checked' => $this->addAllLoaders ? 'checked' : '',
-      'notes' => 'This should only be turned on to check out all loaders, but it should be turned off for production to avoid adding unnecessary css to your website.',
     ]);
 
     // attached loaders
@@ -317,10 +343,19 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
         <li><a href="https://cssloaders.github.io/" target="_blank">cssloaders.github.io</a></li>
         <li><a href="https://www.cssportal.com/css-loader-generator/" target="_blank">cssportal.com/css-loader-generator</a></li>
         </ul>',
-      'notes' => 'Know more? Let me know!',
+      'notes' => 'ATTENTION: You need to make sure that the keyframes definitions are Know more? Let me know!',
     ]);
 
     return $inputfields;
+  }
+
+  private function lessArray(): array
+  {
+    $arr = [];
+    foreach (glob(__DIR__ . "/loaders/*.less") as $file) {
+      $arr[] = substr(basename($file), 0, -5);
+    }
+    return $arr;
   }
 
   /**
@@ -328,6 +363,9 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
    */
   private function loadersTable(): string
   {
+    if (!count($this->loaders)) {
+      return "No loaders attached. Check the checkbox above and save the page to try out the loaders that are shipped with this module.";
+    }
     $html = '<div class="uk-overflow-auto"><table class="uk-table uk-table-small uk-table-striped">';
     $html .= '<thead><tr><th>Name</th><th>Path & Setup</th></tr></thead>';
     foreach ($this->loaders as $key => $path) {
