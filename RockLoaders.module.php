@@ -26,7 +26,8 @@ class RockLoaders extends WireData implements Module, ConfigurableModule
     $this->cssfile = wire()->config->paths->assets . 'rockloaders.min.css';
 
     // add checked internal loaders
-    foreach ($this->internalLoaders as $key) $this->add($key);
+    $internalLoaders = $this->internalLoaders ?? [];
+    foreach ($internalLoaders as $key) $this->add($key);
 
     wire()->addHookBefore('Page::render', $this, 'compileLoaders');
     wire()->addHookAfter('Modules::refresh', $this, 'clearCache');
