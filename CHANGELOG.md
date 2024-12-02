@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/baumrock/RockLoaders/compare/v1.1.1...v1.1.2) (2024-12-02)
+
+
+### Bug Fixes
+
+* foreach error if module config never saved ([e6ce63a](https://github.com/baumrock/RockLoaders/commit/e6ce63a59ebaa40bb493ccfd1748221ca45faf33))
+
 ## [1.1.1](https://github.com/baumrock/RockLoaders/compare/v1.1.0...v1.1.1) (2024-11-03)
 
 
